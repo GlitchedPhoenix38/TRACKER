@@ -8,7 +8,8 @@ import { DatabaseSync } from 'node:sqlite';
 const PORT = Number(process.env.PORT || 3000);
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Linux';
 const SESSION_SECRET = process.env.SESSION_SECRET || randomBytes(32).toString('hex');
-const DB_DIR = join(process.cwd(), 'data');
+const IS_VERCEL = Boolean(process.env.VERCEL);
+const DB_DIR = IS_VERCEL ? '/tmp' : join(process.cwd(), 'data');
 const PUBLIC_DIR = join(process.cwd(), 'public');
 const DB_PATH = join(DB_DIR, 'analytics.sqlite');
 
@@ -412,6 +413,10 @@ async function route(req, res) {
   }
 }
 
+export async function handler(req, res) {
+  return route(req, res);
+}
+
 function serveFile(res, filePath) {
   if (!filePath.startsWith(PUBLIC_DIR) || !existsSync(filePath)) return send(res, 404, 'Not found');
   const ext = extname(filePath);
@@ -421,10 +426,12 @@ function serveFile(res, filePath) {
   res.end(readFileSync(filePath));
 }
 
-createServer(route).listen(PORT, () => {
-  console.log(`Analytics app listening on http://localhost:${PORT}`);
-  console.log(`Admin panel: http://localhost:${PORT}/admin`);
-  if (ADMIN_PASSWORD === 'Linux') {
-    console.log('Set ADMIN_PASSWORD before exposing this app outside local development.');
-  }
-});
+if (!IS_VERCEL) {
+  createServer(route).listen(PORT, () => {
+    console.log(`Analytics app listening on http://localhost:${PORT}`);
+    console.log(`Admin panel: http://localhost:${PORT}/admin`);
+    if (ADMIN_PASSWORD === 'Linux') {
+      console.log('Set ADMIN_PASSWORD before exposing this app outside local development.');
+    }
+  });
+}
