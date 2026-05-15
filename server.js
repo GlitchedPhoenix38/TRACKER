@@ -9,7 +9,8 @@ const PORT = Number(process.env.PORT || 3000);
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Linux';
 const SESSION_SECRET = process.env.SESSION_SECRET || randomBytes(32).toString('hex');
 const IS_VERCEL = process.env.VERCEL === '1' || process.env.VERCEL === 'true' || Boolean(process.env.VERCEL);
-const IS_DIRECT_RUN = import.meta.url === pathToFileURL(process.argv[1]).href;
+const IS_DIRECT_RUN = typeof process.argv[1] === 'string'
+  && import.meta.url === pathToFileURL(process.argv[1]).href;
 const DB_DIR = IS_VERCEL ? '/tmp' : join(process.cwd(), 'data');
 const PUBLIC_DIR = join(process.cwd(), 'public');
 const DB_PATH = join(DB_DIR, 'analytics.sqlite');
@@ -66,10 +67,10 @@ const statements = {
       last_seen_at = excluded.last_seen_at,
       duration_seconds = MAX(visits.duration_seconds, excluded.duration_seconds),
       path = excluded.path,
-      latitude = COALESCE(excluded.latitude, visits.latitude),
-      longitude = COALESCE(excluded.longitude, visits.longitude),
-      location_accuracy = COALESCE(excluded.location_accuracy, visits.location_accuracy),
-      location_source = COALESCE(excluded.location_source, visits.location_source)
+      latitude = COALESCE(visits.latitude, excluded.latitude),
+      longitude = COALESCE(visits.longitude, excluded.longitude),
+      location_accuracy = COALESCE(visits.location_accuracy, excluded.location_accuracy),
+      location_source = COALESCE(visits.location_source, excluded.location_source)
   `),
   updateVisit: db.prepare(`
     UPDATE visits
@@ -84,7 +85,10 @@ const statements = {
       latitude = ?,
       longitude = ?,
       location_accuracy = ?,
-      location_source = 'browser'
+      location_source = 'browser',
+      country = NULL,
+      region = NULL,
+      city = NULL
     WHERE session_id = ?
   `),
   recentVisits: db.prepare('SELECT * FROM visits ORDER BY started_at DESC LIMIT ?'),
@@ -286,7 +290,7 @@ function browserLocation(payload) {
   return {
     latitude,
     longitude,
-    accuracy: Number.isFinite(accuracy) && accuracy >= 0 ? Math.min(accuracy, 1_000_000) : null
+    accuracy: Number.isFinite(accuracy) && accuracy > 0 ? Math.min(accuracy, 1_000_000) : null
   };
 }
 
@@ -428,7 +432,7 @@ function serveFile(res, filePath) {
 }
 
 if (!IS_VERCEL && IS_DIRECT_RUN) {
-  createServer(route).listen(PORT, () => {
+  createServer(route).listen(PORT, '0.0.0.0', () => {
     console.log(`Analytics app listening on http://localhost:${PORT}`);
     console.log(`Admin panel: http://localhost:${PORT}/admin`);
     if (ADMIN_PASSWORD === 'Linux') {

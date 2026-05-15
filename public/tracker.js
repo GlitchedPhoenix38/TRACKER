@@ -26,17 +26,22 @@
   send('start');
 
   if (window.isSecureContext && navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition((position) => {
-      send('location', {
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
-        accuracy: position.coords.accuracy
+    const sendLocation = (opts) => {
+      navigator.geolocation.getCurrentPosition((position) => {
+        send('location', {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          accuracy: position.coords.accuracy
+        });
+      }, () => {
+        if (opts.retry) setTimeout(() => sendLocation({ retry: false }), 3000);
+      }, {
+        enableHighAccuracy: opts.retry,
+        maximumAge: opts.retry ? 0 : 300000,
+        timeout: opts.retry ? 15000 : 10000
       });
-    }, () => {}, {
-      enableHighAccuracy: true,
-      maximumAge: 300000,
-      timeout: 10000
-    });
+    };
+    sendLocation({ retry: true });
   }
 
   const heartbeat = window.setInterval(() => send('heartbeat'), 15000);
