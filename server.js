@@ -2,13 +2,14 @@ import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { extname, join, normalize } from 'node:path';
-import { URL } from 'node:url';
+import { pathToFileURL, URL } from 'node:url';
 import { DatabaseSync } from 'node:sqlite';
 
 const PORT = Number(process.env.PORT || 3000);
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Linux';
 const SESSION_SECRET = process.env.SESSION_SECRET || randomBytes(32).toString('hex');
-const IS_VERCEL = Boolean(process.env.VERCEL);
+const IS_VERCEL = process.env.VERCEL === '1' || process.env.VERCEL === 'true' || Boolean(process.env.VERCEL);
+const IS_DIRECT_RUN = import.meta.url === pathToFileURL(process.argv[1]).href;
 const DB_DIR = IS_VERCEL ? '/tmp' : join(process.cwd(), 'data');
 const PUBLIC_DIR = join(process.cwd(), 'public');
 const DB_PATH = join(DB_DIR, 'analytics.sqlite');
@@ -426,7 +427,7 @@ function serveFile(res, filePath) {
   res.end(readFileSync(filePath));
 }
 
-if (!IS_VERCEL) {
+if (!IS_VERCEL && IS_DIRECT_RUN) {
   createServer(route).listen(PORT, () => {
     console.log(`Analytics app listening on http://localhost:${PORT}`);
     console.log(`Admin panel: http://localhost:${PORT}/admin`);
