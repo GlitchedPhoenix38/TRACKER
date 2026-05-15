@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Visitor Analytics</title>
+    <link rel="stylesheet" href="/styles.css?v=3">
+    <script defer src="/admin.js?v=4"></script>
+  </head>
+  <body class="dashboard-page">
+    <header class="dashboard-header">
+      <div>
+        <p class="eyebrow">Website analytics</p>
+        <h1>Visitor engagement</h1>
+      </div>
+      <div class="dashboard-actions">
+        <span id="liveStatus" class="live-status">Live</span>
+        <a class="secondary-link" href="/">View site</a>
+      </div>
+    </header>
+
+    <main class="dashboard-grid">
+      <section class="metric-grid" aria-label="Summary metrics">
+        <article class="metric"><span>Total visits</span><strong id="totalVisits">0</strong></article>
+        <article class="metric"><span>Unique visitors</span><strong id="uniqueVisitors">0</strong></article>
+        <article class="metric"><span>Avg. session</span><strong id="avgDuration">0s</strong></article>
+        <article class="metric"><span>Last visit</span><strong id="lastVisit">No data</strong></article>
+      </section>
+
+      <section class="panel map-panel">
+        <div class="panel-heading">
+          <h2>Visitor locations</h2>
+          <span id="mapCount">0 plotted</span>
+        </div>
+        <svg id="map" viewBox="0 0 960 480" role="img" aria-label="World map with visitor points">
+          <rect width="960" height="480" rx="8"></rect>
+          <path d="M142 146h122l34 42-29 40 58 30-20 52-106 14-68-45-54-84zM382 120h168l62 46-18 66 64 42-42 72-146 18-92-58 24-88-66-58zM684 142h122l60 58-30 70 38 52-78 54-116-18-26-70 42-54-58-46zM548 348h84l42 42-22 44-86 8-44-38z"></path>
+          <g id="mapPoints"></g>
+        </svg>
+        <p class="panel-note">Exact coordinates are recorded only when the visitor allows browser location access; otherwise this falls back to hosting geo headers or country centroids.</p>
+      </section>
+
+      <section class="panel">
+        <div class="panel-heading"><h2>Visits over time</h2></div>
+        <canvas id="timelineChart" width="720" height="260"></canvas>
+      </section>
+
+      <section class="panel">
+        <div class="panel-heading"><h2>Geographic distribution</h2></div>
+        <canvas id="countryChart" width="720" height="260"></canvas>
+      </section>
+
+      <section class="panel">
+        <div class="panel-heading"><h2>Devices</h2></div>
+        <canvas id="deviceChart" width="720" height="260"></canvas>
+      </section>
+
+      <section class="panel">
+        <div class="panel-heading"><h2>Browsers</h2></div>
+        <canvas id="browserChart" width="720" height="260"></canvas>
+      </section>
+
+      <section class="panel table-panel">
+        <div class="panel-heading">
+          <h2>Visitor logs</h2>
+          <span id="logCount">0 rows</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>IP</th>
+                <th>Location</th>
+                <th>Device</th>
+                <th>Browser</th>
+                <th>Duration</th>
+              </tr>
+            </thead>
+            <tbody id="visitRows"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
